@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.jboss.marshalling.FieldSetter;
 
@@ -172,7 +174,11 @@ public final class MethodIdentifier implements Serializable {
 
     /**
      * Look up a method matching this method identifier using reflection.
-     * 
+     * <p>
+     * If two classes with the same name and parameter types exist then the behavoiur of
+     * {@link Class#getDeclaredMethod(String, Class...)} is followed (that is if one methods return type is more specific than
+     * the others then it is returned, otherwise it is not defined)
+     *
      * @param clazz the class to search
      * @return the method
      * @throws NoSuchMethodException if no such method exists
@@ -182,13 +188,49 @@ public final class MethodIdentifier implements Serializable {
     public Method getMethod(final Class<?> clazz) throws NoSuchMethodException, ClassNotFoundException {
         Class<?>[] types = typesOf(parameterTypes, clazz.getClassLoader());
         Class<?> currentClass = clazz;
+        List<Method> found = new ArrayList<Method>();
         while (currentClass != null) {
             Method[] methods = currentClass.getDeclaredMethods();
             for (Method method : methods) {
                 if (method.getName().equals(name)) {
                     if (Arrays.equals(method.getParameterTypes(), types)) {
-                        return method;
+                        found.add(method);
                     }
+                }
+            }
+            if (!found.isEmpty()) {
+                int size = found.size();
+                if (size == 1) {
+                    return found.get(0);
+                } else {
+                    // we have to methods with the same name and parameters
+                    // this is usually caused by covariant return types, and usually one of these methods will
+                    // be a bridge method. We look for this simple case first as it is the most common
+                    if (size == 2) {
+                        Method m1 = found.get(0);
+                        Method m2 = found.get(1);
+                        if (m1.isBridge() && !m2.isBridge()) {
+                            return m2;
+                        } else if (!m1.isBridge() && m2.isBridge()) {
+                            return m1;
+                        }
+                    }
+                    // now we want to emulate getDeclaredMethods behaviour
+                    // if one of the methods has a return type that is more specific that any of
+                    // the other methods then it will be returned, otherwise a method is chosen at random
+                    Method returnMethod = found.get(0);
+                    for (int i = 1; i < size; ++i) {
+                        Method compareMethod = found.get(i);
+                        if (compareMethod.getReturnType().isAssignableFrom(returnMethod.getReturnType())) {
+                            continue;
+                        } else if (returnMethod.getReturnType().isAssignableFrom(compareMethod.getReturnType())) {
+                            returnMethod = compareMethod;
+                        } else {
+                            // we just return one at random
+                            return returnMethod;
+                        }
+                    }
+                    return returnMethod;
                 }
             }
             currentClass = currentClass.getSuperclass();
@@ -198,7 +240,7 @@ public final class MethodIdentifier implements Serializable {
 
     /**
      * Get the human-readable representation of this identifier.
-     * 
+     *
      * @return the string
      */
     public String toString() {

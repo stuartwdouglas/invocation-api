@@ -21,6 +21,7 @@
  */
 package org.jboss.invocation;
 
+import java.io.InputStream;
 import java.lang.reflect.Method;
 
 import junit.framework.Assert;
@@ -46,7 +47,14 @@ public class MethodIdentifierTest {
         Method method2 = id2.getMethod(Private2.class);
         Assert.assertEquals(Private2.class, method2.getDeclaringClass());
         Assert.assertEquals(int.class, method2.getParameterTypes()[0]);
+    }
 
+    @Test
+    public void testMultipleMethods() throws NoSuchMethodException, ClassNotFoundException {
+        MethodIdentifier id = MethodIdentifier.getIdentifier("amethod");
+        Method method = id.getMethod(Private2.class);
+        Assert.assertEquals(Private2.class, method.getDeclaringClass());
+        Assert.assertEquals(InputStream.class, method.getReturnType());
     }
 
     public double someMethod(double d1, long l2, String s2) {

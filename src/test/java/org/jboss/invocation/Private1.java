@@ -26,4 +26,8 @@ public class Private1 {
     private void method(long value) {
 
     }
+
+    public Object amethod() {
+        return null;
+    }
 }

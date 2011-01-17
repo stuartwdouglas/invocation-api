@@ -21,8 +21,14 @@
  */
 package org.jboss.invocation;
 
+import java.io.InputStream;
+
 public class Private2 extends Private1 {
     private void method(int value) {
 
+    }
+
+    public InputStream amethod() {
+        return null;
     }
 }
