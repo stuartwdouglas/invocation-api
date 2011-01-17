@@ -27,6 +27,7 @@ import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+
 import org.jboss.marshalling.FieldSetter;
 
 /**
@@ -76,7 +77,25 @@ public final class MethodIdentifier implements Serializable {
     private static Class<?>[] typesOf(final String[] names, final ClassLoader classLoader) throws ClassNotFoundException {
         final Class<?>[] types = new Class<?>[names.length];
         for (int i = 0, namesLength = names.length; i < namesLength; i++) {
-            types[i] = Class.forName(names[i], false, classLoader);
+            if (names[i].equals("int")) {
+                types[i] = int.class;
+            } else if (names[i].equals("short")) {
+                types[i] = short.class;
+            } else if (names[i].equals("byte")) {
+                types[i] = byte.class;
+            } else if (names[i].equals("char")) {
+                types[i] = char.class;
+            } else if (names[i].equals("long")) {
+                types[i] = long.class;
+            } else if (names[i].equals("boolean")) {
+                types[i] = boolean.class;
+            } else if (names[i].equals("double")) {
+                types[i] = double.class;
+            } else if (names[i].equals("float")) {
+                types[i] = float.class;
+            } else {
+                types[i] = Class.forName(names[i], false, classLoader);
+            }
         }
         return types;
     }
