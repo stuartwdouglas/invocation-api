@@ -23,18 +23,33 @@ package org.jboss.invocation;
 
 import java.lang.reflect.Method;
 
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 public class MethodIdentifierTest {
 
     @Test
     public void testPrimitiveTypes() throws SecurityException, NoSuchMethodException, ClassNotFoundException {
-        Method aMethod = getClass().getDeclaredMethod("aMethod", double.class, long.class, String.class);
+        Method aMethod = getClass().getDeclaredMethod("someMethod", double.class, long.class, String.class);
         MethodIdentifier identifier = MethodIdentifier.getIdentifierForMethod(aMethod);
         identifier.getPublicMethod(getClass());
     }
 
-    public double aMethod(double d1, long l2, String s2) {
+    @Test
+    public void testGetMethod() throws NoSuchMethodException, ClassNotFoundException {
+        MethodIdentifier id1 = MethodIdentifier.getIdentifier("method", long.class);
+        MethodIdentifier id2 = MethodIdentifier.getIdentifier("method", int.class);
+        Method method1 = id1.getMethod(Private2.class);
+        Assert.assertEquals(Private1.class, method1.getDeclaringClass());
+        Assert.assertEquals(long.class, method1.getParameterTypes()[0]);
+        Method method2 = id2.getMethod(Private2.class);
+        Assert.assertEquals(Private2.class, method2.getDeclaringClass());
+        Assert.assertEquals(int.class, method2.getParameterTypes()[0]);
+
+    }
+
+    public double someMethod(double d1, long l2, String s2) {
         return 0;
     }
 }

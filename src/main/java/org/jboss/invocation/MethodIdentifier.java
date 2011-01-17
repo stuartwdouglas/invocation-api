@@ -171,8 +171,34 @@ public final class MethodIdentifier implements Serializable {
     }
 
     /**
+     * Look up a method matching this method identifier using reflection.
+     * 
+     * @param clazz the class to search
+     * @return the method
+     * @throws NoSuchMethodException if no such method exists
+     * @throws ClassNotFoundException if one of the classes referenced by this identifier are not found in {@code clazz}'s class
+     * loader
+     */
+    public Method getMethod(final Class<?> clazz) throws NoSuchMethodException, ClassNotFoundException {
+        Class<?>[] types = typesOf(parameterTypes, clazz.getClassLoader());
+        Class<?> currentClass = clazz;
+        while (currentClass != null) {
+            Method[] methods = currentClass.getDeclaredMethods();
+            for (Method method : methods) {
+                if (method.getName().equals(name)) {
+                    if (Arrays.equals(method.getParameterTypes(), types)) {
+                        return method;
+                    }
+                }
+            }
+            currentClass = currentClass.getSuperclass();
+        }
+        throw new NoSuchMethodException(toString() + " does not exist on " + clazz);
+    }
+
+    /**
      * Get the human-readable representation of this identifier.
-     *
+     * 
      * @return the string
      */
     public String toString() {
